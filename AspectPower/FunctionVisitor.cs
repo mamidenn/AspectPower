@@ -9,26 +9,10 @@ namespace AspectPower
     {
         public override object VisitNamedBlock(NamedBlockAst namedBlockAst)
         {
-            var newStatements = new List<StatementAst>();
-
-            var zeroExtent = new ScriptExtent(
-                new ScriptPosition(string.Empty, 0, 0, string.Empty),
-                new ScriptPosition(string.Empty, 0, 0, string.Empty)
-            );
-            var logStatement = new PipelineAst(
-                zeroExtent,
-                new CommandAst(
-                    zeroExtent,
-                    new[]{
-                        new StringConstantExpressionAst(zeroExtent, "Write-Output", StringConstantType.BareWord),
-                        new StringConstantExpressionAst(zeroExtent, "AST IS WORKING!", StringConstantType.SingleQuoted)
-                    },
-                    TokenKind.Unknown,
-                    Enumerable.Empty<RedirectionAst>()
-                ));
-
-            newStatements.Add(logStatement);
-            newStatements.AddRange(VisitAst(namedBlockAst.Statements));
+            var newStatements = Enumerable.Empty<StatementAst>()
+                .Append(AstFactory.GetWriteVerbose("→ $($MyInvocation.InvocationName)"))
+                .Concat(VisitAst(namedBlockAst.Statements))
+                .Append(AstFactory.GetWriteVerbose("← $($MyInvocation.InvocationName)"));
 
             var newTraps = VisitAst(namedBlockAst.Traps);
 
