@@ -151,7 +151,7 @@ namespace AspectPower
 
         public object VisitFunctionDefinition(FunctionDefinitionAst functionDefinitionAst)
         {
-            var body = functionDefinitionAst.Body?.Visit(new FunctionVisitor()) as ScriptBlockAst;
+            var body = functionDefinitionAst.Body?.Visit(new FunctionVisitor(functionDefinitionAst)) as ScriptBlockAst;
             var parameters = VisitAst(functionDefinitionAst.Parameters);
             return new FunctionDefinitionAst(functionDefinitionAst.Extent,
                 functionDefinitionAst.IsFilter, functionDefinitionAst.IsWorkflow,
