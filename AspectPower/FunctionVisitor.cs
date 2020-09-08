@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using AspectPower.Extensions;
 
 namespace AspectPower
 {
@@ -24,14 +25,14 @@ namespace AspectPower
             var newStatements = new List<StatementAst>();
             for (int i = 0; i < attributes.Count; i++)
             {
-                if (!IsFunctionAspect(attributes[i]))
+                if (!attributes[i].Is<FunctionAspect>())
                     continue;
                 newStatements.Add(GetTransitionStatement(Transition.Enter, namedBlockAst.BlockKind, i));
             }
             newStatements.AddRange(VisitAst(namedBlockAst.Statements));
             for (int i = attributes.Count - 1; i >= 0; i--)
             {
-                if (!IsFunctionAspect(attributes[i]))
+                if (!attributes[i].Is<FunctionAspect>())
                     continue;
                 newStatements.Add(GetTransitionStatement(Transition.Leave, namedBlockAst.BlockKind, i));
             }
@@ -66,7 +67,5 @@ namespace AspectPower
         }
 
         private static Type GetAttributeType(AttributeAst a) => a.TypeName.GetReflectionAttributeType();
-
-        private static bool IsFunctionAspect(Type t) => typeof(FunctionAspect).IsAssignableFrom(t);
     }
 }

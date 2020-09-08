@@ -4,7 +4,7 @@ using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Management.Automation.Runspaces;
 
-namespace AspectPower
+namespace AspectPower.Extensions
 {
     public static class ScriptBlockExtensions
     {
