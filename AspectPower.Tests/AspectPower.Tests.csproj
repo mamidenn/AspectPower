@@ -18,4 +18,8 @@
     <ProjectReference Include="..\AspectPower\AspectPower.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TestFunctions.ps1" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
@@ -21,33 +20,37 @@ namespace AspectPower
 
         public override object VisitNamedBlock(NamedBlockAst namedBlockAst)
         {
-            var attributes = this.attributes.Select(GetAttributeType).ToList();
-            var newStatements = new List<StatementAst>();
-            for (int i = 0; i < attributes.Count; i++)
-            {
-                if (!attributes[i].Is<FunctionAspect>())
-                    continue;
-                newStatements.Add(GetTransitionStatement(Transition.Enter, namedBlockAst.BlockKind, i));
-            }
-            newStatements.AddRange(VisitAst(namedBlockAst.Statements));
-            for (int i = attributes.Count - 1; i >= 0; i--)
-            {
-                if (!attributes[i].Is<FunctionAspect>())
-                    continue;
-                newStatements.Add(GetTransitionStatement(Transition.Leave, namedBlockAst.BlockKind, i));
-            }
-
-            var newTraps = VisitAst(namedBlockAst.Traps);
+            var statements = AddTransitionStatements(namedBlockAst.Statements, namedBlockAst.BlockKind);
+            var traps = VisitAst(namedBlockAst.Traps);
 
             return new NamedBlockAst(
                 namedBlockAst.Extent,
                 namedBlockAst.BlockKind,
                 new StatementBlockAst(
                     namedBlockAst.Extent,
-                    newStatements,
-                    newTraps),
+                    statements,
+                    traps),
                 namedBlockAst.Unnamed
             );
+        }
+
+        private IEnumerable<StatementAst> AddTransitionStatements(IEnumerable<StatementAst> statements, TokenKind blockKind)
+        {
+            var attributes = this.attributes.Select(GetAttributeType).ToList();
+            var newStatements = new List<StatementAst>();
+            for (int i = 0; i < attributes.Count; i++)
+            {
+                if (attributes[i].Is<FunctionAspect>())
+                    newStatements.Add(GetTransitionStatement(Transition.Enter, blockKind, i));
+            }
+            newStatements.AddRange(VisitAst(statements));
+            for (int i = attributes.Count - 1; i >= 0; i--)
+            {
+                if (attributes[i].Is<FunctionAspect>())
+                    newStatements.Add(GetTransitionStatement(Transition.Leave, blockKind, i));
+            }
+
+            return newStatements;
         }
 
         enum Transition
@@ -63,7 +66,7 @@ namespace AspectPower
 
         private static StatementAst GetStatementAst(string statement)
         {
-            return (ScriptBlock.Create(statement).Ast as ScriptBlockAst).EndBlock.Statements[0].Copy() as StatementAst;
+            return (ScriptBlock.Create(statement).Ast as ScriptBlockAst).EndBlock.Statements.Single().Copy() as StatementAst;
         }
 
         private static Type GetAttributeType(AttributeAst a) => a.TypeName.GetReflectionAttributeType();
