@@ -17,11 +17,17 @@ namespace AspectPower.Tests
         public void Test1()
         {
             var input = @"function Hello {
-    [AspectPower.Trace()]
-    param()
+    [CmdletBinding()]
+    [AspectPower.FunctionAspect()]
+    param(
+        [Parameter(ValueFromPipeline)]
+        $Foo
+    )
 
-    Write-Output 'Hello!'
-}            
+    process {
+        Write-Output $Foo
+    }
+}
 ";
             var ast = Parser.ParseInput(input, out _, out _);
             var newAst = ast.GetScriptBlock().ResolveAspects();

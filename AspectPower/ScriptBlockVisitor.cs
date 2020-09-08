@@ -6,7 +6,7 @@ using System.Management.Automation.Language;
 
 namespace AspectPower
 {
-    public class ScriptBlockVisitor : ICustomAstVisitor2
+    public class DuplicatingAstVisitor : ICustomAstVisitor2
     {
         protected T VisitAst<T>(T ast) where T : Ast =>
             ast?.Visit(this) as T;
@@ -86,7 +86,7 @@ namespace AspectPower
 
         public object VisitConstantExpression(ConstantExpressionAst constantExpressionAst)
         {
-            throw new System.NotImplementedException();
+            return constantExpressionAst.Copy();
         }
 
         public object VisitContinueStatement(ContinueStatementAst continueStatementAst)
@@ -190,7 +190,8 @@ namespace AspectPower
 
         public object VisitNamedAttributeArgument(NamedAttributeArgumentAst namedAttributeArgumentAst)
         {
-            throw new System.NotImplementedException();
+            var argument = VisitAst(namedAttributeArgumentAst.Argument);
+            return new NamedAttributeArgumentAst(namedAttributeArgumentAst.Extent, namedAttributeArgumentAst.ArgumentName, argument, namedAttributeArgumentAst.ExpressionOmitted);
         }
 
         public virtual object VisitNamedBlock(NamedBlockAst namedBlockAst)
@@ -216,7 +217,10 @@ namespace AspectPower
 
         public object VisitParameter(ParameterAst parameterAst)
         {
-            throw new System.NotImplementedException();
+            var attributes = VisitAst(parameterAst.Attributes);
+            var defaultValue = VisitAst(parameterAst.DefaultValue);
+            var name = VisitAst(parameterAst.Name);
+            return new ParameterAst(parameterAst.Extent, name, attributes, defaultValue);
         }
 
         public object VisitParenExpression(ParenExpressionAst parenExpressionAst)

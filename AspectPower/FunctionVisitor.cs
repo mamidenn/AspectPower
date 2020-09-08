@@ -7,7 +7,7 @@ using System.Management.Automation.Language;
 
 namespace AspectPower
 {
-    public class FunctionVisitor : ScriptBlockVisitor
+    public class FunctionVisitor : DuplicatingAstVisitor
     {
         private readonly FunctionDefinitionAst functionDefinitionAst;
         private readonly IEnumerable<AttributeAst> attributes;
@@ -20,31 +20,21 @@ namespace AspectPower
 
         public override object VisitNamedBlock(NamedBlockAst namedBlockAst)
         {
-            var functionAspects = attributes.Select(GetAttributeType).Where(IsFunctionAspect);
-            var attribute = functionAspects.First();
-
-            // foreach (var attribute in functionAspects)
-            // {
-            StatementAst onEnter;
-            StatementAst onLeave;
-            // switch (namedBlockAst.BlockKind)
-            // {
-            //     case TokenKind.Begin:
-            //         break;
-            //     case TokenKind.Process:
-            //         break;
-            //     case TokenKind.End:
-            onEnter = GetStatementAst($"$MyInvocation.MyCommand.ScriptBlock.Attributes.Where( {{ $_ -is [{attribute.FullName}] }}).OnEnterEnd($MyInvocation) | Write-Output");
-            onLeave = GetStatementAst($"$MyInvocation.MyCommand.ScriptBlock.Attributes.Where( {{ $_ -is [{attribute.FullName}] }}).OnLeaveEnd($MyInvocation) | Write-Output");
-            //     break;
-            // default:
-            //     throw new Exception();
-            // }
-            // }
-            var newStatements = Enumerable.Empty<StatementAst>()
-                .Append(onEnter)
-                .Concat(VisitAst(namedBlockAst.Statements))
-                .Append(onLeave);
+            var attributes = this.attributes.Select(GetAttributeType).ToList();
+            var newStatements = new List<StatementAst>();
+            for (int i = 0; i < attributes.Count; i++)
+            {
+                if (!IsFunctionAspect(attributes[i]))
+                    continue;
+                newStatements.Add(GetTransitionStatement(Transition.Enter, namedBlockAst.BlockKind, i));
+            }
+            newStatements.AddRange(VisitAst(namedBlockAst.Statements));
+            for (int i = attributes.Count - 1; i >= 0; i--)
+            {
+                if (!IsFunctionAspect(attributes[i]))
+                    continue;
+                newStatements.Add(GetTransitionStatement(Transition.Leave, namedBlockAst.BlockKind, i));
+            }
 
             var newTraps = VisitAst(namedBlockAst.Traps);
 
@@ -57,6 +47,17 @@ namespace AspectPower
                     newTraps),
                 namedBlockAst.Unnamed
             );
+        }
+
+        enum Transition
+        {
+            Enter,
+            Leave
+        }
+
+        private static StatementAst GetTransitionStatement(Transition transition, TokenKind blockKind, int attributeIndex)
+        {
+            return GetStatementAst($"$MyInvocation.MyCommand.ScriptBlock.Attributes[{attributeIndex}].On{transition}{blockKind}($MyInvocation)");
         }
 
         private static StatementAst GetStatementAst(string statement)

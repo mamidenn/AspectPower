@@ -1,27 +1,31 @@
+using module './AspectPower/bin/Debug/netcoreapp3.1/AspectPower.dll'
 $VerbosePreference = 'Continue'
-Import-Module $PSScriptRoot\..\AspectPower.psd1
+# Import-Module $PSScriptRoot\..\AspectPower.psd1
 
 class Trace : AspectPower.FunctionAspect {
-    [object] OnEnterEnd([System.Management.Automation.InvocationInfo] $invocationInfo) {
+    OnEnterProcess([System.Management.Automation.InvocationInfo] $invocationInfo) {
         Write-Verbose "-> $($invocationInfo.MyCommand.Name)"
-        return $null
     }
-    [object] OnLeaveEnd([System.Management.Automation.InvocationInfo] $invocationInfo) {
+    OnLeaveProcess([System.Management.Automation.InvocationInfo] $invocationInfo) {
         Write-Verbose "<- $($invocationInfo.MyCommand.Name)"
-        return $null
     }
 }
 
 $a = { 
     function Hello {
-        [Trace()]
         [CmdletBinding()]
-        param()
+        [Trace()]
+        param(
+            [Parameter(ValueFromPipeline)]
+            $Foo
+        )
 
-        Write-Output 'Hello!'
+        process {
+            Write-Output $Foo
+        }
     }
 }
 
 . (Resolve-Aspect $a)
 
-Hello
+'Foo', 'Bar', 'Baz' | Hello

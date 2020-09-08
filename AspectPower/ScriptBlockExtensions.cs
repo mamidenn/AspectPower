@@ -10,7 +10,7 @@ namespace AspectPower
     {
         public static ScriptBlock ResolveAspects(this ScriptBlock scriptBlock)
         {
-            var newAst = scriptBlock.Ast.Visit(new ScriptBlockVisitor()) as ScriptBlockAst;
+            var newAst = scriptBlock.Ast.Visit(new DuplicatingAstVisitor()) as ScriptBlockAst;
             return newAst.GetScriptBlock();
         }
     }
