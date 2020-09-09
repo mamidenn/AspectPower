@@ -1,6 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation.Language;
 
@@ -16,12 +15,14 @@ namespace AspectPower
 
         public object VisitArrayExpression(ArrayExpressionAst arrayExpressionAst)
         {
-            throw new System.NotImplementedException();
+            var statementBlock = VisitAst(arrayExpressionAst.SubExpression);
+            return new ArrayExpressionAst(arrayExpressionAst.Extent, statementBlock);
         }
 
         public object VisitArrayLiteral(ArrayLiteralAst arrayLiteralAst)
         {
-            throw new System.NotImplementedException();
+            var elements = VisitAst(arrayLiteralAst.Elements).ToList();
+            return new ArrayLiteralAst(arrayLiteralAst.Extent, elements);
         }
 
         public object VisitAssignmentStatement(AssignmentStatementAst assignmentStatementAst)
@@ -43,27 +44,34 @@ namespace AspectPower
 
         public object VisitAttributedExpression(AttributedExpressionAst attributedExpressionAst)
         {
-            throw new System.NotImplementedException();
+            var attribute = VisitAst(attributedExpressionAst.Attribute);
+            var child = VisitAst(attributedExpressionAst.Child);
+            return new AttributedExpressionAst(attributedExpressionAst.Extent, attribute, child);
         }
 
         public object VisitBinaryExpression(BinaryExpressionAst binaryExpressionAst)
         {
-            throw new System.NotImplementedException();
+            var left = VisitAst(binaryExpressionAst.Left);
+            var right = VisitAst(binaryExpressionAst.Right);
+            return new BinaryExpressionAst(binaryExpressionAst.Extent, left, binaryExpressionAst.Operator, right, binaryExpressionAst.ErrorPosition);
         }
 
         public object VisitBlockStatement(BlockStatementAst blockStatementAst)
         {
-            throw new System.NotImplementedException();
+            var body = VisitAst(blockStatementAst.Body);
+            return new BlockStatementAst(blockStatementAst.Extent, blockStatementAst.Kind, body);
         }
 
         public object VisitBreakStatement(BreakStatementAst breakStatementAst)
         {
-            throw new System.NotImplementedException();
+            return breakStatementAst.Copy();
         }
 
         public object VisitCatchClause(CatchClauseAst catchClauseAst)
         {
-            throw new System.NotImplementedException();
+            var catchTypes = VisitAst(catchClauseAst.CatchTypes);
+            var body = VisitAst(catchClauseAst.Body);
+            return new CatchClauseAst(catchClauseAst.Extent, catchTypes, body);
         }
 
         public object VisitCommand(CommandAst commandAst)
@@ -76,12 +84,15 @@ namespace AspectPower
 
         public object VisitCommandExpression(CommandExpressionAst commandExpressionAst)
         {
-            throw new System.NotImplementedException();
+            var expression = VisitAst(commandExpressionAst.Expression);
+            var redirections = VisitAst(commandExpressionAst.Redirections);
+            return new CommandExpressionAst(commandExpressionAst.Extent, expression, redirections);
         }
 
         public object VisitCommandParameter(CommandParameterAst commandParameterAst)
         {
-            throw new System.NotImplementedException();
+            var argument = VisitAst(commandParameterAst.Argument);
+            return new CommandParameterAst(commandParameterAst.Extent, commandParameterAst.ParameterName, argument, commandParameterAst.ErrorPosition);
         }
 
         public object VisitConstantExpression(ConstantExpressionAst constantExpressionAst)
@@ -91,62 +102,83 @@ namespace AspectPower
 
         public object VisitContinueStatement(ContinueStatementAst continueStatementAst)
         {
-            throw new System.NotImplementedException();
+            var label = VisitAst(continueStatementAst.Label);
+            return new ContinueStatementAst(continueStatementAst.Extent, label);
         }
 
         public object VisitConvertExpression(ConvertExpressionAst convertExpressionAst)
         {
-            throw new System.NotImplementedException();
+            var typeConstraint = VisitAst(convertExpressionAst.Type);
+            var child = VisitAst(convertExpressionAst.Child);
+            return new ConvertExpressionAst(convertExpressionAst.Extent, typeConstraint, child);
         }
 
         public object VisitDataStatement(DataStatementAst dataStatementAst)
         {
-            throw new System.NotImplementedException();
+            var commandsAllowed = VisitAst(dataStatementAst.CommandsAllowed);
+            var body = VisitAst(dataStatementAst.Body);
+            return new DataStatementAst(dataStatementAst.Extent, dataStatementAst.Variable, commandsAllowed, body);
         }
 
         public object VisitDoUntilStatement(DoUntilStatementAst doUntilStatementAst)
         {
-            throw new System.NotImplementedException();
+            var condition = VisitAst(doUntilStatementAst.Condition);
+            var body = VisitAst(doUntilStatementAst.Body);
+            return new DoUntilStatementAst(doUntilStatementAst.Extent, doUntilStatementAst.Label, condition, body);
         }
 
         public object VisitDoWhileStatement(DoWhileStatementAst doWhileStatementAst)
         {
-            throw new System.NotImplementedException();
+            var condition = VisitAst(doWhileStatementAst.Condition);
+            var body = VisitAst(doWhileStatementAst.Body);
+            return new DoUntilStatementAst(doWhileStatementAst.Extent, doWhileStatementAst.Label, condition, body);
         }
 
         public object VisitErrorExpression(ErrorExpressionAst errorExpressionAst)
         {
-            throw new System.NotImplementedException();
+            // TODO: why is there no public constructor for ast with nested asts?
+            return errorExpressionAst.Copy();
         }
 
         public object VisitErrorStatement(ErrorStatementAst errorStatementAst)
         {
-            throw new System.NotImplementedException();
+            // TODO: why is there no public constructor for ast with nested asts?
+            return errorStatementAst.Copy();
         }
 
         public object VisitExitStatement(ExitStatementAst exitStatementAst)
         {
-            throw new System.NotImplementedException();
+            var pipeline = VisitAst(exitStatementAst.Pipeline);
+            return new ExitStatementAst(exitStatementAst.Extent, pipeline);
         }
 
         public object VisitExpandableStringExpression(ExpandableStringExpressionAst expandableStringExpressionAst)
         {
-            throw new System.NotImplementedException();
+            return expandableStringExpressionAst.Copy();
         }
 
         public object VisitFileRedirection(FileRedirectionAst fileRedirectionAst)
         {
-            throw new System.NotImplementedException();
+            var file = VisitAst(fileRedirectionAst.Location);
+            return new FileRedirectionAst(fileRedirectionAst.Extent, fileRedirectionAst.FromStream, file, fileRedirectionAst.Append);
         }
 
         public object VisitForEachStatement(ForEachStatementAst forEachStatementAst)
         {
-            throw new System.NotImplementedException();
+            var throttleLimit = VisitAst(forEachStatementAst.ThrottleLimit);
+            var variable = VisitAst(forEachStatementAst.Variable);
+            var expression = VisitAst(forEachStatementAst.Condition);
+            var body = VisitAst(forEachStatementAst.Body);
+            return new ForEachStatementAst(forEachStatementAst.Extent, forEachStatementAst.Label, forEachStatementAst.Flags, throttleLimit, variable, expression, body);
         }
 
         public object VisitForStatement(ForStatementAst forStatementAst)
         {
-            throw new System.NotImplementedException();
+            var initializer = VisitAst(forStatementAst.Initializer);
+            var condition = VisitAst(forStatementAst.Condition);
+            var iterator = VisitAst(forStatementAst.Iterator);
+            var body = VisitAst(forStatementAst.Body);
+            return new ForStatementAst(forStatementAst.Extent, forStatementAst.Label, initializer, condition, iterator, body);
         }
 
         public object VisitFunctionDefinition(FunctionDefinitionAst functionDefinitionAst)
@@ -160,12 +192,14 @@ namespace AspectPower
 
         public object VisitHashtable(HashtableAst hashtableAst)
         {
-            throw new System.NotImplementedException();
+            return hashtableAst.Copy();
         }
 
         public object VisitIfStatement(IfStatementAst ifStmtAst)
         {
-            throw new System.NotImplementedException();
+            var elseClause = VisitAst(ifStmtAst.ElseClause);
+            var clauses = ifStmtAst.Clauses.Select(t => Tuple.Create(VisitAst(t.Item1), VisitAst(t.Item2)));
+            return new IfStatementAst(ifStmtAst.Extent, clauses, elseClause);
         }
 
         public object VisitIndexExpression(IndexExpressionAst indexExpressionAst)
