@@ -53,7 +53,8 @@ namespace AspectPower
         {
             var left = VisitAst(binaryExpressionAst.Left);
             var right = VisitAst(binaryExpressionAst.Right);
-            return new BinaryExpressionAst(binaryExpressionAst.Extent, left, binaryExpressionAst.Operator, right, binaryExpressionAst.ErrorPosition);
+            return new BinaryExpressionAst(binaryExpressionAst.Extent, left, binaryExpressionAst.Operator, right, 
+                binaryExpressionAst.ErrorPosition);
         }
 
         public object VisitBlockStatement(BlockStatementAst blockStatementAst)
@@ -92,7 +93,8 @@ namespace AspectPower
         public object VisitCommandParameter(CommandParameterAst commandParameterAst)
         {
             var argument = VisitAst(commandParameterAst.Argument);
-            return new CommandParameterAst(commandParameterAst.Extent, commandParameterAst.ParameterName, argument, commandParameterAst.ErrorPosition);
+            return new CommandParameterAst(commandParameterAst.Extent, commandParameterAst.ParameterName, argument, 
+                commandParameterAst.ErrorPosition);
         }
 
         public object VisitConstantExpression(ConstantExpressionAst constantExpressionAst)
@@ -169,7 +171,8 @@ namespace AspectPower
             var variable = VisitAst(forEachStatementAst.Variable);
             var expression = VisitAst(forEachStatementAst.Condition);
             var body = VisitAst(forEachStatementAst.Body);
-            return new ForEachStatementAst(forEachStatementAst.Extent, forEachStatementAst.Label, forEachStatementAst.Flags, throttleLimit, variable, expression, body);
+            return new ForEachStatementAst(forEachStatementAst.Extent, forEachStatementAst.Label, forEachStatementAst.Flags, 
+                throttleLimit, variable, expression, body);
         }
 
         public object VisitForStatement(ForStatementAst forStatementAst)
@@ -204,28 +207,37 @@ namespace AspectPower
 
         public object VisitIndexExpression(IndexExpressionAst indexExpressionAst)
         {
-            throw new System.NotImplementedException();
+            var target = VisitAst(indexExpressionAst.Target);
+            var index = VisitAst(indexExpressionAst.Index);
+            return new IndexExpressionAst(indexExpressionAst.Extent, target, index);
         }
 
         public object VisitInvokeMemberExpression(InvokeMemberExpressionAst invokeMemberExpressionAst)
         {
-            throw new System.NotImplementedException();
+            var expression = VisitAst(invokeMemberExpressionAst.Expression);
+            var method = VisitAst(invokeMemberExpressionAst.Member);
+            var arguments = VisitAst(invokeMemberExpressionAst.Arguments);
+            return new InvokeMemberExpressionAst(invokeMemberExpressionAst.Extent, expression, method, arguments, 
+                invokeMemberExpressionAst.Static);
         }
 
         public object VisitMemberExpression(MemberExpressionAst memberExpressionAst)
         {
-            throw new System.NotImplementedException();
+            var expression = VisitAst(memberExpressionAst.Expression);
+            var member = VisitAst(memberExpressionAst.Member);
+            return new MemberExpressionAst(memberExpressionAst.Extent, expression, member, memberExpressionAst.Static);
         }
 
         public object VisitMergingRedirection(MergingRedirectionAst mergingRedirectionAst)
         {
-            throw new System.NotImplementedException();
+            return mergingRedirectionAst.Copy();
         }
 
         public object VisitNamedAttributeArgument(NamedAttributeArgumentAst namedAttributeArgumentAst)
         {
             var argument = VisitAst(namedAttributeArgumentAst.Argument);
-            return new NamedAttributeArgumentAst(namedAttributeArgumentAst.Extent, namedAttributeArgumentAst.ArgumentName, argument, namedAttributeArgumentAst.ExpressionOmitted);
+            return new NamedAttributeArgumentAst(namedAttributeArgumentAst.Extent, namedAttributeArgumentAst.ArgumentName, 
+                argument, namedAttributeArgumentAst.ExpressionOmitted);
         }
 
         public virtual object VisitNamedBlock(NamedBlockAst namedBlockAst)
@@ -259,7 +271,8 @@ namespace AspectPower
 
         public object VisitParenExpression(ParenExpressionAst parenExpressionAst)
         {
-            throw new System.NotImplementedException();
+            var pipeline = VisitAst(parenExpressionAst.Pipeline);
+            return new ParenExpressionAst(parenExpressionAst.Extent, pipeline);
         }
 
         public object VisitPipeline(PipelineAst pipelineAst)
@@ -270,7 +283,8 @@ namespace AspectPower
 
         public object VisitReturnStatement(ReturnStatementAst returnStatementAst)
         {
-            throw new System.NotImplementedException();
+            var pipeline = VisitAst(returnStatementAst.Pipeline);
+            return new ReturnStatementAst(returnStatementAst.Extent, pipeline);
         }
 
         public object VisitScriptBlock(ScriptBlockAst scriptBlockAst)
@@ -286,12 +300,15 @@ namespace AspectPower
 
         public object VisitScriptBlockExpression(ScriptBlockExpressionAst scriptBlockExpressionAst)
         {
-            throw new System.NotImplementedException();
+            var scriptBlock = VisitAst(scriptBlockExpressionAst.ScriptBlock);
+            return new ScriptBlockExpressionAst(scriptBlockExpressionAst.Extent, scriptBlock);
         }
 
         public object VisitStatementBlock(StatementBlockAst statementBlockAst)
         {
-            throw new System.NotImplementedException();
+            var statements = VisitAst(statementBlockAst.Statements);
+            var traps = VisitAst(statementBlockAst.Traps);
+            return new StatementBlockAst(statementBlockAst.Extent, statements, traps);
         }
 
         public object VisitStringConstantExpression(StringConstantExpressionAst stringConstantExpressionAst)
@@ -302,27 +319,38 @@ namespace AspectPower
 
         public object VisitSubExpression(SubExpressionAst subExpressionAst)
         {
-            throw new System.NotImplementedException();
+            var statementBlock = VisitAst(subExpressionAst.SubExpression);
+            return new SubExpressionAst(subExpressionAst.Extent, statementBlock);
         }
 
         public object VisitSwitchStatement(SwitchStatementAst switchStatementAst)
         {
-            throw new System.NotImplementedException();
+            var condition = VisitAst(switchStatementAst.Condition);
+            var clauses = switchStatementAst.Clauses.Select(c => Tuple.Create(c.Item1, c.Item2));
+            var @default = VisitAst(switchStatementAst.Default);
+            return new SwitchStatementAst(switchStatementAst.Extent, switchStatementAst.Label, condition, switchStatementAst.Flags,
+                clauses, @default);
         }
 
         public object VisitThrowStatement(ThrowStatementAst throwStatementAst)
         {
-            throw new System.NotImplementedException();
+            var pipeline = VisitAst(throwStatementAst.Pipeline);
+            return new ThrowStatementAst(throwStatementAst.Extent, pipeline);
         }
 
         public object VisitTrap(TrapStatementAst trapStatementAst)
         {
-            throw new System.NotImplementedException();
+            var trapType = VisitAst(trapStatementAst.TrapType);
+            var body = VisitAst(trapStatementAst.Body);
+            return new TrapStatementAst(trapStatementAst.Extent, trapType, body);
         }
 
         public object VisitTryStatement(TryStatementAst tryStatementAst)
         {
-            throw new System.NotImplementedException();
+            var body = VisitAst(tryStatementAst.Body);
+            var catchClauses = VisitAst(tryStatementAst.CatchClauses);
+            var @finally = VisitAst(tryStatementAst.Finally);
+            return new TryStatementAst(tryStatementAst.Extent, body, catchClauses, @finally);
         }
 
         public object VisitTypeConstraint(TypeConstraintAst typeConstraintAst)
@@ -332,17 +360,19 @@ namespace AspectPower
 
         public object VisitTypeExpression(TypeExpressionAst typeExpressionAst)
         {
-            throw new System.NotImplementedException();
+            return typeExpressionAst.Copy();
         }
 
         public object VisitUnaryExpression(UnaryExpressionAst unaryExpressionAst)
         {
-            throw new System.NotImplementedException();
+            var child = VisitAst(unaryExpressionAst.Child);
+            return new UnaryExpressionAst(unaryExpressionAst.Extent, unaryExpressionAst.TokenKind, child);
         }
 
         public object VisitUsingExpression(UsingExpressionAst usingExpressionAst)
         {
-            throw new System.NotImplementedException();
+            var expressionAst = VisitAst(usingExpressionAst.SubExpression);
+            return new UsingExpressionAst(usingExpressionAst.Extent, expressionAst);
         }
 
         public object VisitVariableExpression(VariableExpressionAst variableExpressionAst)
@@ -352,7 +382,9 @@ namespace AspectPower
 
         public object VisitWhileStatement(WhileStatementAst whileStatementAst)
         {
-            throw new System.NotImplementedException();
+            var condition = VisitAst(whileStatementAst.Condition);
+            var body = VisitAst(whileStatementAst.Body);
+            return new WhileStatementAst(whileStatementAst.Extent, whileStatementAst.Label, condition, body);
         }
 
         public object VisitBaseCtorInvokeMemberExpression(BaseCtorInvokeMemberExpressionAst baseCtorInvokeMemberExpressionAst)
